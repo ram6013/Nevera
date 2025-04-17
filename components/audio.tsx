@@ -2,6 +2,7 @@ import { Audio } from 'expo-av';
 import { useEffect, useState } from 'react';
 import { Button, View, Text, Alert } from 'react-native';
 
+const token = process.env.EXPO_PUBLIC_ACCESS_TOKEN;
 export default function AudioPage() {
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [status, setStatus] = useState('Listo para grabar');
@@ -81,7 +82,7 @@ export default function AudioPage() {
             const response = await fetch('https://api.wit.ai/speech?v=20250417', {
                 method: 'POST',
                 headers: {
-                    Authorization: 'Bearer G6HF6HOS7DHSOGF273KGDBV6F7OTOA3C',
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'audio/wav',
                 },
                 body: audioBlob,
@@ -92,6 +93,7 @@ export default function AudioPage() {
             const match = regex.exec(textResponse);
             if (match) {
                 console.log(match[1]); // Outputs: Hello world
+                Alert.alert('Texto reconocido', match[1]);
             }
         } catch (error) {
             console.error('Error al enviar audio a Wit.ai:', error);

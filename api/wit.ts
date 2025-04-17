@@ -1,1 +1,0 @@
-const access_token = 'G6HF6HOS7DHSOGF273KGDBV6F7OTOA3C';
