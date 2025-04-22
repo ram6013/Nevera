@@ -1,8 +1,9 @@
+/* eslint-disable prettier/prettier */
 import { Audio } from 'expo-av';
 import { useEffect, useState } from 'react';
 import { Button, View, Text, Alert } from 'react-native';
 
-const token = process.env.EXPO_PUBLIC_ACCESS_TOKEN;
+import {sendAudioToWitAI} from '../api/wit';
 export default function AudioPage() {
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [status, setStatus] = useState('Listo para grabar');
@@ -61,6 +62,8 @@ export default function AudioPage() {
         }
     };
 
+
+
     const stopRecording = async () => {
         if (!recording) return;
 
@@ -75,38 +78,24 @@ export default function AudioPage() {
             console.error('Error al detener la grabación:', error);
         }
     };
-    const sendAudioToWitAI = async () => {
-        if (!audioUri) return;
-        try {
-            const audioBlob = await fetch(audioUri).then(res => res.blob());
-            const response = await fetch('https://api.wit.ai/speech?v=20250417', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'audio/wav',
-                },
-                body: audioBlob,
-            });
-            const textResponse = await response.text();
-            const regex = /"is_final": true,\s*"text": "(.*)"/;
 
-            const match = regex.exec(textResponse);
-            if (match) {
-                console.log(match[1]); // Outputs: Hello world
-                Alert.alert('Texto reconocido', match[1]);
-            }
-        } catch (error) {
-            console.error('Error al enviar audio a Wit.ai:', error);
-            Alert.alert('Error', 'No se pudo procesar el audio');
+    const processAudio = async ()=>{
+        const response = await sendAudioToWitAI(audioUri)
+        if (response?.status === 'Error') {
+            Alert.alert('Error', response?.text);
         }
-    };
+        if (response?.status === 'Succes') {
+            Alert.alert('¿Es este tu texto?', response?.text);
+        }
+    }
+
 
     return (
         <View style={{ padding: 20 }}>
             <Text>{status}</Text>
             <Button title="Iniciar grabación" onPress={startRecording} />
             <Button title="Detener grabación" onPress={stopRecording} disabled={!recording} />
-            <Button title="Enviar audio a Wit.ai" onPress={sendAudioToWitAI} disabled={!audioUri} />
+            <Button title="Procesar" onPress={processAudio} disabled={!audioUri} />
         </View>
     );
 }
